@@ -1,0 +1,16 @@
+---
+- name: Install Node Exporter
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Node Exporter via APT
+      apt:
+        name: prometheus-node-exporter
+        state: present
+        update_cache: yes
+
+    - name: Ensure Node Exporter is running
+      systemd:
+        name: prometheus-node-exporter
+        state: started
+        enabled: yes

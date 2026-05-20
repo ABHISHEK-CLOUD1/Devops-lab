@@ -1,0 +1,22 @@
+---
+- name: Fix and start Samba AD DC
+  hosts: samba_dc
+  become: true
+
+  tasks:
+    - name: Unmask samba-ad-dc service
+      command: systemctl unmask samba-ad-dc
+
+    - name: Start and enable samba-ad-dc
+      service:
+        name: samba-ad-dc
+        state: started
+        enabled: yes
+
+    - name: Verify Samba is running
+      command: samba-tool domain info 127.0.0.1
+      register: domain_info
+
+    - name: Show domain info
+      debug:
+        msg: "{{ domain_info.stdout }}"

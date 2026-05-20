@@ -1,0 +1,45 @@
+---
+- name: Join Linux containers to Samba AD domain
+  hosts: webservers,staging,production
+  become: true
+
+  vars:
+    domain: LAB.LOCAL
+    dc_ip: 10.10.10.105
+    admin_pass: Ironman@01
+
+  tasks:
+    - name: Set DNS to point to Samba DC
+      copy:
+        content: "nameserver {{ dc_ip }}\n"
+        dest: /etc/resolv.conf
+
+    - name: Install expect and realmd
+      apt:
+        name:
+          - expect
+          - realmd
+          - sssd
+          - sssd-tools
+          - adcli
+          - samba-common-bin
+        state: present
+        update_cache: yes
+
+    - name: Join domain using expect script
+      shell: |
+        expect -c '
+        spawn realm join {{ domain }} -U Administrator
+        expect "Password*"
+        send "{{ admin_pass }}\r"
+        expect eof
+        '
+      ignore_errors: yes
+
+    - name: Verify domain join
+      command: realm list
+      register: realm_list
+
+    - name: Show domain membership
+      debug:
+        msg: "{{ realm_list.stdout }}"

@@ -1,0 +1,21 @@
+---
+- name: Activate eth1 internal network interface
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create netplan config for eth1
+      copy:
+        dest: /etc/netplan/99-eth1.yaml
+        mode: '0600'
+        content: |
+          network:
+            version: 2
+            ethernets:
+              eth1:
+                dhcp4: no
+                addresses:
+                  - {{ internal_ip }}/24
+
+    - name: Apply netplan
+      command: netplan apply

@@ -1,0 +1,80 @@
+---
+- name: Install Samba Active Directory DC
+  hosts: samba_dc
+  become: true
+
+  vars:
+    domain: LAB
+    realm: LAB.LOCAL
+    admin_pass: Ironman@01
+
+  tasks:
+    - name: Set hostname to samba-dc
+      hostname:
+        name: samba-dc
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Samba and required packages
+      apt:
+        name:
+          - samba
+          - krb5-user
+          - winbind
+          - libpam-winbind
+          - libnss-winbind
+          - dnsutils
+          - net-tools
+        state: present
+
+    - name: Stop Samba services before provisioning
+      service:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - smbd
+        - nmbd
+        - winbind
+      ignore_errors: yes
+
+    - name: Remove default smb.conf
+      file:
+        path: /etc/samba/smb.conf
+        state: absent
+
+    - name: Provision Samba AD DC
+      command: >
+        samba-tool domain provision
+        --use-rfc2307
+        --domain={{ domain }}
+        --realm={{ realm }}
+        --server-role=dc
+        --dns-backend=SAMBA_INTERNAL
+        --adminpass={{ admin_pass }}
+      args:
+        creates: /etc/samba/smb.conf
+
+    - name: Copy Kerberos config
+      copy:
+        src: /var/lib/samba/private/krb5.conf
+        dest: /etc/krb5.conf
+        remote_src: yes
+
+    - name: Start and enable Samba AD DC
+      service:
+        name: samba-ad-dc
+        state: started
+        enabled: yes
+
+    - name: Disable conflicting services
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      loop:
+        - smbd
+        - nmbd
+        - winbind
+      ignore_errors: yes
