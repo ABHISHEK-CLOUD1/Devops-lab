@@ -14,12 +14,12 @@ pipeline {
                 sh 'ansible-playbook -i inventory.ini install-nginx.yml'
             }
         }
-
-        stage('Verify') {
+         stage('Verify Nginx') {
             steps {
-                sh 'curl -s http://192.168.155.131 | grep -o "<title>.*</title>"'
-            }
-        }
+                sh 'curl -s http://10.10.10.101 | grep -o "<title>.*</title>"'
+    }
+}
+    
     }
 
     post {
