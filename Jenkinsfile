@@ -4,30 +4,31 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo 'Code pulled from GitHub!'
+                echo 'Pulling latest code from GitHub...'
+                checkout scm
             }
         }
-
-        stage('Run Ansible') {
+        
+        stage('Deploy Docker App via Ansible') {
             steps {
-                sh 'ansible --version'
-                sh 'ansible-playbook -i inventory.ini install-nginx.yml'
+                echo 'Building and Deploying new Docker container...'
+                sh 'ansible-playbook -i inventory.ini ansible/deploy-app.yml'
             }
         }
-         stage('Verify Nginx') {
+        
+        stage('Verify') {
             steps {
-                sh 'curl -s http://10.10.10.101 | grep -o "<title>.*</title>"'
-    }
-}
-    
+                echo 'Deployment Successful! App is running on 10.10.10.108:8080'
+            }
+        }
     }
 
     post {
         success {
-            echo 'Deployment successful! Nginx is running.'
+            echo 'Docker Deployment successful! V2 is live.'
         }
         failure {
-            echo 'Deployment failed!'
+            echo 'Docker Deployment failed! Check the Ansible logs.'
         }
     }
 }

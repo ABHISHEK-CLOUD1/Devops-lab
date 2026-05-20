@@ -1,0 +1,28 @@
+---
+- name: Build and Deploy Docker Application
+  hosts: docker
+  become: yes
+  tasks:
+    - name: Ensure app directory exists on Docker Host
+      file:
+        path: /root/my-first-app
+        state: directory
+
+    - name: Copy application files from Jenkins workspace to Docker Host
+      copy:
+        src: ../app/
+        dest: /root/my-first-app/
+
+    - name: Build the new Docker image
+      command: docker build -t abhis01/abhi-web-app:latest /root/my-first-app/
+
+    - name: Stop existing container (if running)
+      command: docker stop my-custom-website
+      ignore_errors: yes
+
+    - name: Remove existing container
+      command: docker rm my-custom-website
+      ignore_errors: yes
+
+    - name: Deploy the new container
+      command: docker run -d -p 8080:80 --name my-custom-website abhis01/abhi-web-app:latest
