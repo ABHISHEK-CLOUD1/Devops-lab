@@ -1,7 +1,7 @@
 terraform {
   required_providers {
-    proxmox = { source = "bpg/proxmox"; version = "0.46.0" }
-    oci     = { source = "oracle/oci"; version = "~> 5.0" }
+    proxmox = { source = "bpg/proxmox", version = "0.46.0" }
+    oci     = { source = "oracle/oci", version = "~> 5.0" }
   }
 }
 
