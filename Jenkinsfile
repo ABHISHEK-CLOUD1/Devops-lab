@@ -8,6 +8,23 @@ pipeline {
                 checkout scm
             }
         }
+
+stage('Deploy Cloud Infrastructure') {
+            environment {
+                TF_VAR_oci_tenancy_ocid = credentials('OCI_TENANCY')
+                TF_VAR_oci_user_ocid    = credentials('OCI_USER')
+                TF_VAR_oci_fingerprint  = credentials('OCI_FINGERPRINT')
+                TF_VAR_oci_private_key  = '/opt/jenkins/.oci/oci_api_key.pem'
+                TF_VAR_oci_region       = 'ap-mumbai-1'
+            }
+            steps {
+                dir('terraform') {
+                    sh 'terraform init -upgrade'
+                    sh 'terraform plan'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
         
         stage('Deploy Docker App via Ansible') {
             steps {
