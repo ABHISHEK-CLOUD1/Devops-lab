@@ -12,7 +12,6 @@ provider "proxmox" {
   insecure  = true
 }
 
-# Core OCI Provider configuration
 provider "oci" {
   tenancy_ocid     = var.oci_tenancy_ocid
   user_ocid        = var.oci_user_ocid
@@ -22,10 +21,10 @@ provider "oci" {
 }
 
 # ===================================================================
-# CLOUD VM 1: Grafana Management Host (1 OCPU, 6 GB RAM)
+# CLOUD VM 1: Grafana Management Host
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
-  availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" # Switched to AD-2
+  availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
   compartment_id      = var.oci_tenancy_ocid
   display_name        = "cloud-vm-1-grafana"
   shape               = "VM.Standard.A1.Flex"
@@ -36,8 +35,9 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
   }
 
   source_details {
-    source_type = "image"
-    source_id   = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
+    source_type             = "image"
+    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
+    boot_volume_size_in_gbs = 50  # Added explicit Free Tier allocation
   }
 
   create_vnic_details {
@@ -52,10 +52,10 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 }
 
 # ===================================================================
-# CLOUD VM 2: Kubernetes Node Host (3 OCPUs, 18 GB RAM)
+# CLOUD VM 2: Kubernetes Node Host
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_2_kubernetes" {
-  availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" # Switched to AD-2
+  availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
   compartment_id      = var.oci_tenancy_ocid
   display_name        = "cloud-vm-2-kubernetes"
   shape               = "VM.Standard.A1.Flex"
@@ -66,8 +66,9 @@ resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   }
 
   source_details {
-    source_type = "image"
-    source_id   = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
+    source_type             = "image"
+    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
+    boot_volume_size_in_gbs = 50  # Added explicit Free Tier allocation
   }
 
   create_vnic_details {
