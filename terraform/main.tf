@@ -190,7 +190,8 @@ resource "proxmox_virtual_environment_container" "prometheus" {
 resource "proxmox_virtual_environment_container" "grafana" {
   node_name = "abhi"
   vm_id     = 107
-  initialization {
+ lifecycle { ignore_changes = all } 
+ initialization {
     hostname = "grafana"
     ip_config {
       ipv4 {

@@ -25,7 +25,7 @@ variable "oci_region" {
 
 variable "oci_public_subnet_ocid" { 
   type    = string
-  default = "ocid1.subnet.oc1.ap-mumbai-1.aaaaaaaavcnpublicsubnetplaceholderocid" 
+  default = "ocid1.subnet.oc1.ap-mumbai-1.aaaaaaaarkmln3bzxujqfhn6ttiizwdv4ifpxbyf7yn22i2aswae3a4uh43a" 
 }
 
 variable "laptop_ssh_public_key" {
