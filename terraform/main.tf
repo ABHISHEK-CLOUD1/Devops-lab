@@ -25,7 +25,7 @@ provider "oci" {
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
   availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
-  compartment_id      = var.oci_tenancy_ocid
+  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" # Hardcoded
   display_name        = "cloud-vm-1-grafana"
   shape               = "VM.Standard.A1.Flex"
 
@@ -37,7 +37,7 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
   source_details {
     source_type             = "image"
     source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
-    boot_volume_size_in_gbs = 50  # Added explicit Free Tier allocation
+    boot_volume_size_in_gbs = 50  
   }
 
   create_vnic_details {
@@ -56,7 +56,7 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
-  compartment_id      = var.oci_tenancy_ocid
+  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" # Hardcoded
   display_name        = "cloud-vm-2-kubernetes"
   shape               = "VM.Standard.A1.Flex"
 
@@ -68,7 +68,7 @@ resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   source_details {
     source_type             = "image"
     source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
-    boot_volume_size_in_gbs = 50  # Added explicit Free Tier allocation
+    boot_volume_size_in_gbs = 50  
   }
 
   create_vnic_details {
