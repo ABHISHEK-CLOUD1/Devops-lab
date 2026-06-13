@@ -25,7 +25,7 @@ provider "oci" {
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
   availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
-  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" # Hardcoded
+  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" 
   display_name        = "cloud-vm-1-grafana"
   shape               = "VM.Standard.A1.Flex"
 
@@ -41,9 +41,11 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
   }
 
   create_vnic_details {
-    subnet_id        = var.oci_public_subnet_ocid
-    assign_public_ip = true
-    display_name     = "vnic-grafana"
+    subnet_id               = var.oci_public_subnet_ocid
+    assign_public_ip        = true
+    assign_private_dns_record = true # Added DNS resolution mapping
+    hostname_label          = "grafana" # Required for private DNS mapping
+    display_name            = "vnic-grafana"
   }
 
   metadata = {
@@ -56,7 +58,7 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
-  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" # Hardcoded
+  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" 
   display_name        = "cloud-vm-2-kubernetes"
   shape               = "VM.Standard.A1.Flex"
 
@@ -72,9 +74,11 @@ resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   }
 
   create_vnic_details {
-    subnet_id        = var.oci_public_subnet_ocid
-    assign_public_ip = true
-    display_name     = "vnic-kubernetes"
+    subnet_id               = var.oci_public_subnet_ocid
+    assign_public_ip        = true
+    assign_private_dns_record = true # Added DNS resolution mapping
+    hostname_label          = "k8s-node" # Required for private DNS mapping
+    display_name            = "vnic-kubernetes"
   }
 
   metadata = {
