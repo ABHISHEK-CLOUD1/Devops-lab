@@ -10,3 +10,6 @@ ansible/inventory*.ini
 # Secrets
 *.key
 *.pem
+terraform/retry.log
+terraform/.terraform/
+*.tfstate*
