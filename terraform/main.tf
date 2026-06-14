@@ -1,11 +1,10 @@
 terraform {
   required_providers {
     proxmox = { source = "bpg/proxmox", version = "0.46.0" }
-    oci     = { source = "oracle/oci", version = "~> 5.0" }
+    oci     = { source = "oracle/oci", version = "~> 6.0" }
   }
 }
 
-# Empty local provider skeleton to satisfy dependency structures
 provider "proxmox" {
   endpoint  = "https://192.168.155.128:8006/"
   api_token = "root@pam!terraform=bff2d81c-dce2-4fe5-ad89-66800425ec59"
@@ -24,8 +23,8 @@ provider "oci" {
 # CLOUD VM 1: Grafana Management Host
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
-  availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
-  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" 
+  availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
+  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya"
   display_name        = "cloud-vm-1-grafana"
   shape               = "VM.Standard.A1.Flex"
 
@@ -36,16 +35,16 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 
   source_details {
     source_type             = "image"
-    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
-    boot_volume_size_in_gbs = 50  
+    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa2op2x2s5rnduo5osx6zojr526qxtrvhddkdhks5nllbwjzcylwya"
+    boot_volume_size_in_gbs = 50
   }
 
   create_vnic_details {
-    subnet_id               = var.oci_public_subnet_ocid
-    assign_public_ip        = true
-    assign_private_dns_record = true # Added DNS resolution mapping
-    hostname_label          = "grafana" # Required for private DNS mapping
-    display_name            = "vnic-grafana"
+    subnet_id                 = var.oci_public_subnet_ocid
+    assign_public_ip          = true
+    assign_private_dns_record = true
+    hostname_label            = "grafana"
+    display_name              = "vnic-grafana"
   }
 
   metadata = {
@@ -57,8 +56,8 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 # CLOUD VM 2: Kubernetes Node Host
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_2_kubernetes" {
-  availability_domain = "ZjLz:AP-MUMBAI-1-AD-2" 
-  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya" 
+  availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
+  compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya"
   display_name        = "cloud-vm-2-kubernetes"
   shape               = "VM.Standard.A1.Flex"
 
@@ -69,16 +68,16 @@ resource "oci_core_instance" "cloud_vm_2_kubernetes" {
 
   source_details {
     source_type             = "image"
-    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaannu6wglvsw3mscoxl2742vovff2g27z6is4orj5zndxghqgl4bfa" 
-    boot_volume_size_in_gbs = 50  
+    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa2op2x2s5rnduo5osx6zojr526qxtrvhddkdhks5nllbwjzcylwya"
+    boot_volume_size_in_gbs = 50
   }
 
   create_vnic_details {
-    subnet_id               = var.oci_public_subnet_ocid
-    assign_public_ip        = true
-    assign_private_dns_record = true # Added DNS resolution mapping
-    hostname_label          = "k8s-node" # Required for private DNS mapping
-    display_name            = "vnic-kubernetes"
+    subnet_id                 = var.oci_public_subnet_ocid
+    assign_public_ip          = true
+    assign_private_dns_record = true
+    hostname_label            = "k8s-node"
+    display_name              = "vnic-kubernetes"
   }
 
   metadata = {
