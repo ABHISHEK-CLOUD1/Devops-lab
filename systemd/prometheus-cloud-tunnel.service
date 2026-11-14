@@ -1,0 +1,13 @@
+[Unit]
+Description=Reverse and Forward SSH Tunnel for Prometheus and Cloud Grafana VM
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/ssh -NT -g -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -i /root/.ssh/oci_vm_key -R 9090:10.10.10.106:9090 -L 0.0.0.0:9101:127.0.0.1:9100 ubuntu@137.23.38.177
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

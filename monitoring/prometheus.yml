@@ -1,0 +1,91 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'hybrid-cloud-homelab'
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets: ['localhost:9093']
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          nodename: 'prometheus'
+          ip: '10.10.10.106'
+          application: 'Prometheus & Alertmanager Core'
+
+  - job_name: 'node'
+    static_configs:
+      - targets: ['10.10.10.100:9100']
+        labels:
+          nodename: 'control-node'
+          ip: '10.10.10.100'
+          application: 'Terraform & Ansible Controller'
+
+      - targets: ['10.10.10.101:9100']
+        labels:
+          nodename: 'terraform-test'
+          ip: '10.10.10.101'
+          application: 'Nginx Web Server (Domain Joined)'
+
+      - targets: ['10.10.10.102:9100']
+        labels:
+          nodename: 'jenkins'
+          ip: '10.10.10.102'
+          application: 'Jenkins CI/CD Pipeline (Port 8080)'
+
+      - targets: ['10.10.10.103:9100']
+        labels:
+          nodename: 'staging'
+          ip: '10.10.10.103'
+          application: 'Staging Environment (Domain Joined)'
+
+      - targets: ['10.10.10.104:9100']
+        labels:
+          nodename: 'production'
+          ip: '10.10.10.104'
+          application: 'Production Environment (Domain Joined)'
+
+      - targets: ['10.10.10.105:9100']
+        labels:
+          nodename: 'samba-dc'
+          ip: '10.10.10.105'
+          application: 'Active Directory DC & DNS (lab.local)'
+
+      - targets: ['10.10.10.106:9100']
+        labels:
+          nodename: 'prometheus'
+          ip: '10.10.10.106'
+          application: 'Prometheus Server Node'
+
+      - targets: ['10.10.10.108:9100']
+        labels:
+          nodename: 'docker-host'
+          ip: '10.10.10.108'
+          application: 'Docker Engine (my-custom-website & cAdvisor)'
+
+      # Oracle Cloud VM 1: Grafana Server
+      - targets: ['10.10.10.100:9101']
+        labels:
+          nodename: 'cloud-grafana'
+          ip: '137.23.38.177'
+          application: 'Cloud Grafana Monitoring Server (OCI VM 1)'
+
+      # Oracle Cloud VM 2: Kubernetes Node
+      - targets: ['10.10.10.100:9102']
+        labels:
+          nodename: 'cloud-k8s'
+          ip: '130.210.84.113'
+          application: 'Kubernetes Node (OCI VM 2)'
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['10.10.10.108:8085']
+        labels:
+          nodename: 'docker-host'
+          ip: '10.10.10.108'
+          application: 'cAdvisor Container Monitor'

@@ -1,0 +1,13 @@
+[Unit]
+Description=SSH Tunnel for Cloud K8s VM Node Exporter
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/ssh -NT -g -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -i /root/.ssh/oci_vm_key -L 0.0.0.0:9102:127.0.0.1:9100 ubuntu@130.210.84.113
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
