@@ -20,22 +20,17 @@ provider "oci" {
 }
 
 # ===================================================================
-# CLOUD VM 1: Grafana Management Host
+# CLOUD VM 1: Grafana Management Host (Always Free AMD x86)
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
   availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
   compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya"
   display_name        = "cloud-vm-1-grafana"
-  shape               = "VM.Standard.A1.Flex"
-
-  shape_config {
-    ocpus         = 1
-    memory_in_gbs = 6
-  }
+  shape               = "VM.Standard.E2.1.Micro"
 
   source_details {
     source_type             = "image"
-    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa2op2x2s5rnduo5osx6zojr526qxtrvhddkdhks5nllbwjzcylwya"
+    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaaidgtby45elyebksoixjarvc4q3xttebckkgom656ofaw6tjgbt7a"
     boot_volume_size_in_gbs = 50
   }
 
@@ -53,7 +48,7 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 }
 
 # ===================================================================
-# CLOUD VM 2: Kubernetes Node Host
+# CLOUD VM 2: Kubernetes Node Host (Always Free Ampere ARM - 2 OCPU / 12 GB)
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
@@ -62,8 +57,8 @@ resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   shape               = "VM.Standard.A1.Flex"
 
   shape_config {
-    ocpus         = 3
-    memory_in_gbs = 18
+    ocpus         = 2
+    memory_in_gbs = 12
   }
 
   source_details {
