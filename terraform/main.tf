@@ -20,6 +20,30 @@ provider "oci" {
 }
 
 # ===================================================================
+# Network Security Group: Allow Grafana Web UI (Port 3000)
+# ===================================================================
+resource "oci_core_network_security_group" "grafana_nsg" {
+  compartment_id = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya"
+  vcn_id         = "ocid1.vcn.oc1.ap-mumbai-1.amaaaaaawi2gehyahdojo6uw7mfzousnzrg2dza4hl5hjxqk4rg4mv6ezy7a"
+  display_name   = "grafana-allow-3000"
+}
+
+resource "oci_core_network_security_group_security_rule" "grafana_in_3000" {
+  network_security_group_id = oci_core_network_security_group.grafana_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+
+  tcp_options {
+    destination_port_range {
+      min = 3000
+      max = 3000
+    }
+  }
+}
+
+# ===================================================================
 # CLOUD VM 1: Grafana Management Host (Always Free AMD x86 - E2.1.Micro)
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
@@ -40,6 +64,7 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
     assign_private_dns_record = true
     hostname_label            = "grafana"
     display_name              = "vnic-grafana"
+    nsg_ids                   = [oci_core_network_security_group.grafana_nsg.id]
   }
 
   metadata = {
