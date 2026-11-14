@@ -20,7 +20,7 @@ provider "oci" {
 }
 
 # ===================================================================
-# CLOUD VM 1: Grafana Management Host (Always Free AMD x86)
+# CLOUD VM 1: Grafana Management Host (Always Free AMD x86 - E2.1.Micro)
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_1_grafana" {
   availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
@@ -48,22 +48,17 @@ resource "oci_core_instance" "cloud_vm_1_grafana" {
 }
 
 # ===================================================================
-# CLOUD VM 2: Kubernetes Node Host (Always Free Ampere ARM - 2 OCPU / 12 GB)
+# CLOUD VM 2: Kubernetes Node Host (Always Free AMD x86 - E2.1.Micro)
 # ===================================================================
 resource "oci_core_instance" "cloud_vm_2_kubernetes" {
   availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
   compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya"
   display_name        = "cloud-vm-2-kubernetes"
-  shape               = "VM.Standard.A1.Flex"
-
-  shape_config {
-    ocpus         = 2
-    memory_in_gbs = 12
-  }
+  shape               = "VM.Standard.E2.1.Micro"
 
   source_details {
     source_type             = "image"
-    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa2op2x2s5rnduo5osx6zojr526qxtrvhddkdhks5nllbwjzcylwya"
+    source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaaidgtby45elyebksoixjarvc4q3xttebckkgom656ofaw6tjgbt7a"
     boot_volume_size_in_gbs = 50
   }
 
@@ -79,3 +74,37 @@ resource "oci_core_instance" "cloud_vm_2_kubernetes" {
     ssh_authorized_keys = var.laptop_ssh_public_key
   }
 }
+
+# ===================================================================
+# OPTIONAL: Ampere ARM A1 Template (2 OCPUs, 12 GB RAM)
+# Uncomment when Oracle frees up ARM capacity in AP-MUMBAI-1-AD-1:
+# ===================================================================
+# resource "oci_core_instance" "cloud_vm_arm_k8s" {
+#   availability_domain = "KFHb:AP-MUMBAI-1-AD-1"
+#   compartment_id      = "ocid1.tenancy.oc1..aaaaaaaawg3kix6fkj5tsysw6h56rfsgfdd7xhpxvepeptzgb5werzw3tfya"
+#   display_name        = "cloud-vm-arm-k8s"
+#   shape               = "VM.Standard.A1.Flex"
+#
+#   shape_config {
+#     ocpus         = 2
+#     memory_in_gbs = 12
+#   }
+#
+#   source_details {
+#     source_type             = "image"
+#     source_id               = "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa2op2x2s5rnduo5osx6zojr526qxtrvhddkdhks5nllbwjzcylwya"
+#     boot_volume_size_in_gbs = 50
+#   }
+#
+#   create_vnic_details {
+#     subnet_id                 = var.oci_public_subnet_ocid
+#     assign_public_ip          = true
+#     assign_private_dns_record = true
+#     hostname_label            = "k8s-arm"
+#     display_name              = "vnic-k8s-arm"
+#   }
+#
+#   metadata = {
+#     ssh_authorized_keys = var.laptop_ssh_public_key
+#   }
+# }
