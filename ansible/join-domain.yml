@@ -1,20 +1,25 @@
 ---
-- name: Join Linux containers to Samba AD domain
-  hosts: webservers,staging,production
+- name: Join Linux containers to Samba AD domain (LAB.LOCAL) with SSO & Sudo
+  hosts: all
   become: true
 
   vars:
     domain: LAB.LOCAL
+    realm_name: lab.local
     dc_ip: 10.10.10.105
+    admin_user: Administrator
     admin_pass: Ironman@01
 
   tasks:
     - name: Set DNS to point to Samba DC
       copy:
-        content: "nameserver {{ dc_ip }}\n"
+        content: |
+          search {{ realm_name }}
+          nameserver {{ dc_ip }}
+          nameserver 192.168.155.2
         dest: /etc/resolv.conf
 
-    - name: Install expect and realmd
+    - name: Install expect, realmd, sssd, and domain packages
       apt:
         name:
           - expect
@@ -23,23 +28,71 @@
           - sssd-tools
           - adcli
           - samba-common-bin
+          - libpam-sss
+          - libnss-sss
         state: present
         update_cache: yes
 
-    - name: Join domain using expect script
+    - name: Join domain using realm join
       shell: |
         expect -c '
-        spawn realm join {{ domain }} -U Administrator
+        spawn realm join {{ domain }} -U {{ admin_user }} --install=/
         expect "Password*"
         send "{{ admin_pass }}\r"
         expect eof
         '
       ignore_errors: yes
 
-    - name: Verify domain join
+    - name: Configure SSSD ID mapping range for unprivileged container namespaces
+      blockinfile:
+        path: /etc/sssd/sssd.conf
+        insertafter: "\[domain/{{ realm_name }}\]"
+        block: |
+          ldap_idmap_range_min = 10000
+          ldap_idmap_range_max = 50000
+          ldap_idmap_range_size = 40000
+      register: sssd_config
+
+    - name: Clear SSSD cache and restart daemon
+      shell: systemctl stop sssd && rm -f /var/lib/sss/db/* && systemctl start sssd
+      when: sssd_config.changed
+
+    - name: Enable automatic home directory creation via PAM
+      command: pam-auth-update --enable mkhomedir
+
+    - name: Configure sudoers privileges for Domain Admins
+      copy:
+        content: "%domain\ admins@{{ realm_name }} ALL=(ALL:ALL) ALL
+"
+        dest: /etc/sudoers.d/domain_admins
+        mode: '0440'
+
+    - name: Configure PAM Docker group assignment on docker host nodes
+      block:
+        - name: Ensure pam_group is configured in security group.conf
+          lineinfile:
+            path: /etc/security/group.conf
+            line: "*;*;*@{{ realm_name }};Al0000-2400;docker"
+            create: yes
+        - name: Add pam_group to PAM sshd and common-auth
+          lineinfile:
+            path: "/etc/pam.d/{{ item }}"
+            line: "auth optional pam_group.so"
+          loop:
+            - sshd
+            - common-auth
+      when: "'docker' in group_names or inventory_hostname == 'docker-host'"
+
+    - name: Verify domain membership
       command: realm list
       register: realm_list
 
-    - name: Show domain membership
+    - name: Verify domain admin user resolution
+      command: id abhishek@{{ realm_name }}
+      register: user_check
+
+    - name: Display domain join status
       debug:
-        msg: "{{ realm_list.stdout }}"
+        msg:
+          - "{{ realm_list.stdout_lines }}"
+          - "User resolution: {{ user_check.stdout }}"

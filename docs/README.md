@@ -148,11 +148,52 @@ The architecture deploys an end-to-end unified observability fabric spanning bar
    - Monitors container resource usage, kernel disk metrics, and network interfaces via Node Exporter.
    - Scrapes runtime container statistics from cAdvisor on `CT108:8085`.
 2. **Grafana Cloud Visualization (`OCI VM 1:3000`):**
-   - Grafana v13.3.1 configured with automated Prometheus and Loki data sources.
-   - Dashboards include:
-     - **Hybrid Fleet Overview**: Real-time CPU, RAM, and disk utilization across all 10 nodes.
-     - **Container Performance Analytics**: CPU throttling, memory limits, and socket operations via cAdvisor.
-     - **GitOps Continuous Delivery**: Argo CD sync states, rollback frequencies, and reconciliation timing.
+   - Dashboard: **`Homelab Infrastructure: Node & Application Status`** (`/d/homelab-overview/17c2acb`).
+   - **Cluster Capacities**: Total vCPUs (`27 Cores`), Total RAM (`11.4 GiB`), Total Storage (`186.2 GiB`).
+   - **Cluster Utilization**: Real-time fleet average gauges for CPU, RAM, and Disk.
+   - **Unified Node Fleet Table**: Exactly 11 non-repeating rows consolidating **Capacity** alongside **Usage (%)** (`CPU Cores`, `CPU %`, `RAM Capacity`, `RAM %`, `Disk Capacity`, `Disk %`, `System Uptime`).
+   - **Time Series Trends**: Full-width smooth interpolations tracking CPU, Memory, and Disk mountpoint usage over time.
+
+---
+
+## 🔐 Enterprise SSO & Samba Active Directory Federation (`LAB.LOCAL`)
+
+The entire infrastructure is unified under **Samba Active Directory (`CT105`: `10.10.10.105:389`)**, providing centralized identity management, Single Sign-On (SSO), and role-based access control (RBAC).
+
+```
+                                +-----------------------------------+
+                                |     Samba AD Domain Controller    |
+                                |     CT105 (10.10.10.105:389)      |
+                                |            LAB.LOCAL              |
+                                +-----------------+-----------------+
+                                                  |
+         +--------------------+-------------------+--------------------+--------------------+
+         |                    |                   |                    |                    |
++--------v-------+   +--------v-------+  +--------v-------+   +--------v-------+   +--------v-------+
+|   Proxmox VE   |   |  Cloud Grafana |  |    Argo CD     |   |    Jenkins     |   | Linux Host SSH |
+|   Web Console  |   |   Observability|  |     GitOps     |   |   CI/CD Hub    |   | 7 Nodes Fleet  |
+|  :8006 (Realm) |   | :3000 (OCI VM) |  |     :30443     |   |     :8080      |   | (SSSD / Sudo)  |
++----------------+   +----------------+  +----------------+   +----------------+   +----------------+
+```
+
+### Identity Access & SSO Matrix
+
+| Platform | Endpoint | Authentication Method | Domain Role / Mapping | Access Level |
+|---|---|---|---|---|
+| **Cloud Grafana** | `http://137.23.38.177:3000` | LDAP via encrypted tunnel (`127.0.0.1:1389`) | `Domain Admins` $\rightarrow$ `Admin` (`grafana_admin: true`) | Full Server Admin |
+| **Argo CD** | `https://192.168.155.142:30443` | Built-in Dex OIDC Broker (`/api/dex`) | `Domain Admins`, `abhishek`, `devops` $\rightarrow$ `role:admin` | Full GitOps Admin |
+| **Kubernetes (K3s)**| `10.10.10.109:6443` | Client Kubeconfig & RBAC ClusterRoleBinding | `domain-admins-cluster-admin` $\rightarrow$ `cluster-admin` | Root Kubernetes Admin |
+| **Docker Engine** | CT108 (`10.10.10.108`) | PAM `pam_group.so` (`/etc/security/group.conf`)| Automatic membership in local `docker` group | Unprivileged Container Ops |
+| **Proxmox VE** | `https://192.168.155.128:8006` | Active Directory Realm (`lab.local`) | Synced users $\rightarrow$ `Administrator` role on `/` | Hypervisor Admin |
+| **Jenkins** | `http://10.10.10.102:8080` | Active Directory LDAP Security Realm | `Domain Admins` $\rightarrow$ Full Control Once Logged In | Full CI/CD Admin |
+| **Linux Nodes** | CT100, 101, 102, 103, 104, 108, 109 | SSSD + Kerberos + PAM (`lab.local`) | `/etc/sudoers.d/domain_admins` (`ALL:ALL`) | Root Host Sudo |
+
+### Domain Credentials
+- **Active Directory Realm**: `LAB.LOCAL`
+- **Domain Users**: `abhishek` (Primary Architect), `devops` (Automation), `Administrator` (Built-in)
+- **Unified Password**: `Ironman@01` (Account expiry disabled)
+- **SSSD Namespace Mapping**: `ldap_idmap_range_min = 10000`, `max = 50000` (fits unprivileged container namespaces)
+- **Home Directory Automation**: `pam_mkhomedir` dynamically provisions `/home/%u@%d` upon initial authentication.
 
 ---
 

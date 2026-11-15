@@ -1,0 +1,56 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: domain-admins-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: argocd
+    identity.homelab/realm: "lab.local"
+subjects:
+- kind: User
+  name: abhishek
+  apiGroup: rbac.authorization.k8s.io
+- kind: User
+  name: abhishek@lab.local
+  apiGroup: rbac.authorization.k8s.io
+- kind: User
+  name: devops
+  apiGroup: rbac.authorization.k8s.io
+- kind: User
+  name: devops@lab.local
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: "Domain Admins"
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: "domain admins@lab.local"
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-sso-spec
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: argocd
+    identity.homelab/role: "sso-documentation"
+data:
+  README.md: |
+    # Samba Active Directory SSO & Identity Federation
+    
+    - **Domain Controller**: `10.10.10.105:389` (`samba-dc.lab.local`)
+    - **Domain Realm**: `LAB.LOCAL`
+    - **Identity Provider**: Built-in Dex OIDC Broker (`https://192.168.155.142:30443/api/dex`)
+    - **Authentication Method**: LDAP Simple Bind (`ldap server require strong auth = no`)
+    - **Role Mapping**: `Domain Admins` mapped to `role:admin`
+    
+    ### Integrated Services:
+    1. **Argo CD Web UI**: Single Sign-On via Dex LDAP Connector
+    2. **Kubernetes API**: RBAC ClusterRoleBinding `domain-admins-cluster-admin`
+    3. **Cloud Grafana**: LDAP integration via encrypted tunnel `127.0.0.1:1389`
+    4. **Docker Engine**: PAM `pam_group.so` auto-membership in `docker` group
+    5. **Jenkins CI/CD**: Active Directory LDAP Security Realm
+    6. **Proxmox VE**: Native AD Authentication Realm `lab.local`

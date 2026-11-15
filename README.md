@@ -94,18 +94,21 @@ The platform integrates on-premises virtualization with public cloud infrastruct
 
 ## 2. Global Endpoints & Live Services Directory
 
-| Service | Node / Container | Network Binding | Public / Web URL | Authentication / Protocol |
+| Service | Node / Container | Network Binding | Public / Web URL | Authentication & SSO Method |
 |---|---|---|---|---|
 | **Portfolio Website (Global Edge)** | GitHub Pages | Fastly CDN | [https://abhishek-cloud1.github.io/app/](https://abhishek-cloud1.github.io/app/) | Public (0 gates, instant load, SSL) |
 | **Portfolio Website (Docker)** | `CT108` | `10.10.10.108:8080` | [http://192.168.155.139:8080/](http://192.168.155.139:8080/) | Internal LAN (Nginx SPA, `/app` alias) |
 | **Cloudflare Zero-Trust Tunnel**| `CT108` | `10.10.10.108:8080` | [Cloudflare Live Edge](https://necessary-lauderdale-behaviour-profits.trycloudflare.com) | Quick Tunnel (HTTPS Edge) |
 | **Named Quick Tunnel** | `CT108` | `10.10.10.108:8080` | [https://abhishekmishra.loca.lt](https://abhishekmishra.loca.lt) | Named Localtunnel (`loca.lt`) |
-| **Argo CD Web UI** | `CT109` | `10.10.10.109:30443` | [https://192.168.155.142:30443](https://192.168.155.142:30443) | `admin` / `HWx4ss9ED5GQN067` |
-| **Cloud Grafana UI** | `OCI VM 1` | `10.0.0.86:3000` | [http://137.23.38.177:3000](http://137.23.38.177:3000) | `admin` / Pre-configured |
-| **Prometheus TSDB Core** | `CT106` | `10.10.10.106:9090` | `http://10.10.10.106:9090` | Internal (Scrapes 14 metrics streams) |
-| **Jenkins CI/CD Dashboard** | `CT102` | `10.10.10.102:8080` | [http://10.10.10.102:8080](http://10.10.10.102:8080) | Jenkins Admin / RBAC |
+| **Argo CD Web UI** | `CT109` | `10.10.10.109:30443` | [https://192.168.155.142:30443](https://192.168.155.142:30443) | **Samba AD SSO (Dex OIDC/LDAP)** (`abhishek@lab.local`) |
+| **Cloud Grafana UI** | `OCI VM 1` | `10.0.0.86:3000` | [http://137.23.38.177:3000](http://137.23.38.177:3000) | **Samba AD LDAP SSO** (`abhishek@lab.local` - Server Admin) |
+| **Prometheus TSDB Core** | `CT106` | `10.10.10.106:9090` | `http://10.10.10.106:9090` | Internal (Scrapes 14 metrics streams across 11 targets) |
+| **Jenkins CI/CD Dashboard** | `CT102` | `10.10.10.102:8080` | [http://10.10.10.102:8080](http://10.10.10.102:8080) | **Samba AD LDAP SSO** (`Domain Admins` - Full Control) |
+| **Kubernetes API (K3s)** | `CT109` | `10.10.10.109:6443` | `https://10.10.10.109:6443` | **Kubernetes RBAC SSO** (`domain-admins-cluster-admin`) |
+| **Proxmox VE Web Console** | Hypervisor | `192.168.155.128:8006` | [https://192.168.155.128:8006](https://192.168.155.128:8006) | **Active Directory Realm** (`lab.local` - `Administrator`) |
+| **Docker Engine Socket** | `CT108` | `10.10.10.108` | Unix Socket (`/var/run/docker.sock`)| **PAM Group SSO** (`pam_group.so` auto-membership) |
 | **cAdvisor Container Metrics** | `CT108` | `10.10.10.108:8085` | `http://192.168.155.139:8085` | Internal Prometheus Metric Stream |
-| **Active Directory Domain** | `CT105` | `10.10.10.105` | Domain: `LAB.LOCAL` | Kerberos KDC, DNS, LDAP |
+| **Active Directory Domain** | `CT105` | `10.10.10.105` | Domain: `LAB.LOCAL` | Kerberos KDC (:88), DNS, LDAP Provider (:389) |
 
 ---
 
@@ -236,8 +239,10 @@ Automated continuous integration is executed on **CT102** via Jenkins pipeline `
 
 ## 7. Observability & Telemetry Mesh (Prometheus & Grafana)
 
+The infrastructure employs an enterprise-grade observability architecture integrating on-premises Prometheus Core TSDB with Cloud Grafana on Oracle Cloud Infrastructure via an encrypted reverse SSH tunnel.
+
 ### Prometheus Core TSDB (`CT106:9090`)
-Central Prometheus instance configured with a 15-second scrape interval. Currently tracking **14 metrics streams across 11 targets**, with all targets reporting state `UP` (`1`):
+Central Prometheus instance configured with a 15-second scrape interval. Scrapes **14 metrics streams across 11 targets** with 100% reporting state `UP` (`1`):
 
 ```yaml
 # /etc/prometheus/prometheus.yml target definitions
@@ -260,18 +265,166 @@ scrape_configs:
 ```
 
 ### Cloud Grafana 13.3.1 (`OCI VM 1:3000`)
-* **Tunnel Architecture**: Systemd unit `prometheus-cloud-tunnel.service` on CT100 maintains an encrypted reverse SSH tunnel forwarding `localhost:9090` on OCI VM 1 to `10.10.10.106:9090`.
-* **Telemetry Visualized**: Cluster-wide CPU usage, memory utilization, container CPU/RAM limits, disk I/O latency, network throughput, and Active Directory authentication metrics.
+* **Tunnel Architecture**: CT100 maintains `prometheus-cloud-tunnel.service`, creating an SSH reverse tunnel:
+  * Forwarding `localhost:9090` on OCI VM 1 to `10.10.10.106:9090` (Prometheus TSDB).
+  * Forwarding `localhost:1389` on OCI VM 1 to `10.10.10.105:389` (Samba Active Directory LDAP).
+* **Production Dashboard**: `Homelab Infrastructure: Node & Application Status` (UID: `homelab-overview`, declarative export saved in `dashboards/homelab-overview.json`).
+* **Cluster Capacity Stat Cards**:
+  * **Total Cluster vCPUs**: `27 Cores` (`sum(count without(cpu, mode) (node_cpu_seconds_total{mode="idle"}))`)
+  * **Total Cluster RAM**: `11.4 GiB` (`sum(node_memory_MemTotal_bytes)`)
+  * **Total Cluster Storage**: `186.2 GiB` (`sum(node_filesystem_size_bytes{mountpoint="/", fstype!="rootfs"})`)
+* **Cluster Average Utilization Row**:
+  * Real-time aggregate gauges for Average CPU (`1.8%`), Average Memory (`28.4%`), and Average Disk (`20.3%`).
+* **Consolidated Node Fleet Table (Panel 4)**:
+  * **Zero Duplication**: Solved row fragmentation by standardizing all 8 PromQL queries to identical label grouping `by (nodename, ip, application)`.
+  * **Consolidated Single-Row Metrics**: Displays all 11 nodes (10 Proxmox containers + OCI VM 2) in exactly 11 distinct rows.
+  * **Columns**: Node Name, Host IP, Role / Application, Status, CPU Cores, CPU Usage (%), RAM Capacity, RAM Usage (%), Disk Capacity, Disk Usage (%), System Uptime.
+* **Time-Series Performance Trends**:
+  * Full-width smooth interpolation tracking CPU Utilization Over Time (%), Memory Usage Over Time (%), and Disk Mountpoint Utilization Over Time (%) across all 11 nodes.
 
 ---
 
-## 8. Identity, DNS & Directory Services (Samba Active Directory)
+## 8. Centralized Enterprise SSO & Identity Federation (Samba Active Directory)
 
-* **Domain Controller**: `CT105` running Samba 4 as Active Directory Domain Controller.
+The entire hybrid infrastructure is governed under a unified identity fabric powered by **Samba 4 Active Directory Domain Services (`LAB.LOCAL`)** hosted on `CT105` (`10.10.10.105:389`), providing Single Sign-On (SSO) and Role-Based Access Control (RBAC) across all virtualization, containerization, GitOps, CI/CD, and telemetry systems.
+
+```
+                                +-----------------------------------+
+                                |     Samba AD Domain Controller    |
+                                |     CT105 (10.10.10.105:389)      |
+                                |            LAB.LOCAL              |
+                                +-----------------+-----------------+
+                                                  |
+         +--------------------+-------------------+--------------------+--------------------+
+         |                    |                   |                    |                    |
++--------v-------+   +--------v-------+  +--------v-------+   +--------v-------+   +--------v-------+
+|   Proxmox VE   |   |  Cloud Grafana |  |    Argo CD     |   |    Jenkins     |   | Linux Host SSH |
+|   Web Console  |   |   Observability|  |     GitOps     |   |   CI/CD Hub    |   | 7 Nodes Fleet  |
+|  :8006 (Realm) |   | :3000 (OCI VM) |  |     :30443     |   |     :8080      |   | (SSSD / Sudo)  |
++----------------+   +----------------+  +----------------+   +----------------+   +----------------+
+```
+
+### 8.1 Domain Configuration & Provisioned Principals
 * **Realm**: `LAB.LOCAL` | **Domain NetBIOS**: `LAB`
-* **Kerberos KDC**: Running on port `88` (UDP/TCP).
-* **Integrated DNS**: Authoritative DNS server for `lab.local` zone.
-* **Domain Joined Nodes**: `CT101`, `CT103`, and `CT104` are domain-joined via SSSD and Realm, enabling centralized Active Directory authentication and enterprise Kerberos single sign-on.
+* **Kerberos KDC**: Port `88` (UDP/TCP)
+* **Integrated DNS**: Authoritative DNS server for `lab.local` zone
+* **Transport Policy**: `ldap server require strong auth = no` enabled in `smb.conf` to permit secure internal simple bind on trusted networks.
+* **Password Policy**: Expiry disabled (`max-pwd-age=0`), complexity enforced (`min-pwd-length=7`).
+* **Provisioned Principals**:
+  * `abhishek`: Primary Cloud Architect (`abhishek010601@gmail.com`), member of `Domain Admins` and `Administrators`.
+  * `devops`: Automation & CI/CD Service Account, member of `Domain Admins`.
+  * `Administrator`: Domain Root Built-in Administrator.
+
+### 8.2 Enterprise SSO Integration Matrix
+
+| Platform | Endpoint / Host | Authentication Method | Domain Group / User Mapping | Granted Access Level |
+|---|---|---|---|---|
+| **Cloud Grafana** | `http://137.23.38.177:3000` | LDAP via reverse tunnel (`127.0.0.1:1389`) | `cn=Domain Admins` $\rightarrow$ `Admin` (`grafana_admin: true`) | Full Server Admin & Org Admin |
+| **Argo CD** | `https://192.168.155.142:30443`| Dex OIDC/LDAP Provider (`10.10.10.105:389`)| `Domain Admins`, `abhishek`, `devops` $\rightarrow$ `role:admin` | Root GitOps Cluster Admin |
+| **Kubernetes (K3s)**| `10.10.10.109:6443` | ClusterRoleBinding & Kubeconfig | `domain-admins-cluster-admin` $\rightarrow$ `cluster-admin` | Full Kubernetes Superuser |
+| **Docker Engine** | CT108 (`10.10.10.108`) | PAM `pam_group.so` (`group.conf`) | `*@lab.local` $\rightarrow$ `docker` group | Unprivileged Container Operations |
+| **Proxmox VE** | `https://192.168.155.128:8006` | Active Directory Realm (`lab.local`) | Synced Users $\rightarrow$ `Administrator` role on `/` | Hypervisor Cluster Admin |
+| **Jenkins** | `http://10.10.10.102:8080` | LDAP Security Realm Plugin | `Domain Admins` $\rightarrow$ Full Control Once Logged In | Full CI/CD Engine Admin |
+| **Linux Host Fleet**| CT100, 101, 102, 103, 104, 108, 109 | SSSD + Kerberos + PAM | `%domain\ admins@lab.local` $\rightarrow$ `/etc/sudoers.d/` | Root Host Sudo Privileges |
+
+### 8.3 Detailed Implementation Architecture
+
+#### 1. Cloud Grafana LDAP SSO (`/etc/grafana/ldap.toml`)
+Grafana running on OCI VM 1 connects to Samba AD over the local forwarded port `127.0.0.1:1389`:
+```toml
+[[servers]]
+host = "127.0.0.1"
+port = 1389
+use_ssl = false
+bind_dn = "cn=Administrator,cn=Users,dc=lab,dc=local"
+bind_password = "..."
+search_filter = "(|(sAMAccountName=%s)(userPrincipalName=%s))"
+search_base_dns = ["cn=Users,dc=lab,dc=local"]
+
+[[servers.group_mappings]]
+group_dn = "cn=Domain Admins,cn=Users,dc=lab,dc=local"
+org_role = "Admin"
+grafana_admin = true
+```
+
+#### 2. Argo CD Dex LDAP SSO (`argocd-cm` & `argocd-rbac-cm`)
+Declarative integration via Argo CD's embedded Dex identity broker:
+```yaml
+# argocd-cm Dex LDAP connector
+dex.config: |
+  connectors:
+  - type: ldap
+    id: ldap
+    name: "Samba Active Directory"
+    config:
+      host: "10.10.10.105:389"
+      insecureNoSSL: true
+      bindDN: "cn=Administrator,cn=Users,dc=lab,dc=local"
+      bindPW: "..."
+      userSearch:
+        baseDN: "cn=Users,dc=lab,dc=local"
+        filter: "(&(objectCategory=person)(objectClass=user))"
+        username: "sAMAccountName"
+        idAttr: "sAMAccountName"
+        emailAttr: "mail"
+        nameAttr: "displayName"
+      groupSearch:
+        baseDN: "cn=Users,dc=lab,dc=local"
+        filter: "(objectClass=group)"
+        nameAttr: "cn"
+# argocd-rbac-cm Policy Mapping
+policy.csv: |
+  g, Domain Admins, role:admin
+  g, abhishek, role:admin
+  g, devops, role:admin
+```
+
+#### 3. Kubernetes RBAC SSO (`gitops/manifests/argocd-gitops-engine/02-sso-rbac.yaml`)
+Declarative ClusterRoleBinding applied directly to the K3s control plane:
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: domain-admins-cluster-admin
+subjects:
+- kind: Group
+  name: "Domain Admins"
+  apiGroup: rbac.authorization.k8s.io
+- kind: User
+  name: "abhishek@lab.local"
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+```
+Configured `kubectl` on CT100 (`control-node`) under `abhishek@lab.local` user context pointing to `https://10.10.10.109:6443`.
+
+#### 4. Docker Engine PAM Group SSO (CT108)
+Allows domain users to invoke `docker` commands without root/sudo:
+* `/etc/security/group.conf`:
+  ```ini
+  *;*;*@lab.local;Al0000-2400;docker
+  ```
+* Configured `auth optional pam_group.so` in `/etc/pam.d/common-auth` and `/etc/pam.d/sshd`.
+* Added domain accounts directly to local `docker` group (`usermod -aG docker abhishek@lab.local`).
+
+#### 5. Linux Host SSSD ID Namespace Mapping (Unprivileged LXC Solution)
+Unprivileged Proxmox LXC containers map host UIDs/GIDs to a subuid range (`0-65535`). SSSD's default algorithmic hash generates UIDs above `1,000,000,000`, causing kernel `setgroups` system calls to fail with `EINVAL` (`su: cannot set groups: Invalid argument`).
+* **Permanent Fix**: Automated via `ansible/join-domain.yml` with bounded ID ranges:
+  ```ini
+  [domain/lab.local]
+  id_provider = ldap
+  ldap_idmap_range_min = 10000
+  ldap_idmap_range_max = 50000
+  ldap_idmap_range_size = 40000
+  ```
+* **Home Directory & Sudoers**:
+  * Enabled `pam_mkhomedir.so` in `/etc/pam.d/common-session` to automatically create `/home/%u@%d`.
+  * Distributed `/etc/sudoers.d/domain_admins`:
+    ```
+    %domain\ admins@lab.local ALL=(ALL:ALL) ALL
+    ```
 
 ---
 
@@ -359,6 +512,8 @@ ssh root@192.168.155.128 "pct exec 108 -- docker restart cf-tunnel"
 ├── Jenkinsfile                             # Multi-stage CI/CD pipeline definition
 ├── README.md                               # Comprehensive hybrid architecture documentation
 ├── inventory.ini                           # Unified 11-node Ansible inventory
+├── dashboards/                             # Production Grafana Dashboard Definitions
+│   └── homelab-overview.json               # Exported Homelab Node & Capacity Overview Dashboard
 ├── ansible/                                # Automation playbooks
 │   ├── activate-eth1.yml                   # Secondary network interface activator
 │   ├── deploy-app.yml                      # Automated Docker build, stream & Argo CD sync
