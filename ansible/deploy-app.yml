@@ -56,6 +56,10 @@
   tasks:
     - name: Trigger Argo CD Application Sync
       command: /usr/local/bin/argocd app sync portfolio-website
+      retries: 3
+      delay: 5
+      register: sync_result
+      until: sync_result is not failed
 
     - name: Wait for Argo CD Application Health
       command: /usr/local/bin/argocd app wait portfolio-website --health --timeout 60
