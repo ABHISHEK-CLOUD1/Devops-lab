@@ -98,3 +98,16 @@ Because the homelab resides behind double-NAT with no public IPv4 address, and O
     ├── main.tf
     └── variables.tf
 ```
+
+## 🐙 GitOps Control Plane (Argo CD)
+
+- **Host**: CT109 (rgocd-k8s)
+- **Web UI**: https://192.168.155.142:30443
+- **App-of-Apps Root**: gitops/root-infrastructure.yaml
+- **Managed Clusters / Apps**:
+  - cicd-jenkins
+  - cloud-infrastructure
+  - core-network-identity
+  - docker-nodes
+  - observability-platform
+  - portfolio-website
