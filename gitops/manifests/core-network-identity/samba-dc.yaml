@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: samba-active-directory
+  namespace: infra-network
+  labels:
+    node: CT105
+    role: domain-controller
+spec:
+  ports:
+    - name: dns
+      port: 53
+      targetPort: 53
+    - name: kerberos
+      port: 88
+      targetPort: 88
+    - name: ldap
+      port: 389
+      targetPort: 389
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: samba-active-directory
+  namespace: infra-network
+subsets:
+  - addresses:
+      - ip: 10.10.10.105
+    ports:
+      - name: dns
+        port: 53
+      - name: kerberos
+        port: 88
+      - name: ldap
+        port: 389
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: samba-dc-info
+  namespace: infra-network
+data:
+  vmid: "105"
+  hostname: "samba-dc"
+  ip: "10.10.10.105"
+  realm: "LAB.LOCAL"
+  role: "Active Directory Primary Domain Controller, Kerberos KDC, DNS"
+  status: "ONLINE"

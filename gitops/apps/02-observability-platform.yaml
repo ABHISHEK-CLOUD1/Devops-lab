@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-platform
+  namespace: argocd
+  labels:
+    tier: monitoring
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ABHISHEK-CLOUD1/Devops-lab.git'
+    targetRevision: main
+    path: gitops/manifests/observability-platform
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: infra-monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-core
+  namespace: infra-monitoring
+  labels:
+    node: CT106
+    role: metrics-engine
+spec:
+  ports:
+    - name: http-metrics
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: prometheus-core
+  namespace: infra-monitoring
+subsets:
+  - addresses:
+      - ip: 10.10.10.106
+    ports:
+      - name: http-metrics
+        port: 9090
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-core-info
+  namespace: infra-monitoring
+data:
+  vmid: "106"
+  hostname: "prometheus"
+  ip: "10.10.10.106"
+  ui_endpoint: "http://10.10.10.106:9090"
+  scrape_targets: "11 Active Endpoints (10 On-Prem + Cloud Tunnels)"
+  status: "ONLINE"

@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-infrastructure
+  namespace: argocd
+  labels:
+    tier: cloud
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ABHISHEK-CLOUD1/Devops-lab.git'
+    targetRevision: main
+    path: gitops/manifests/cloud-infrastructure
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: infra-cloud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

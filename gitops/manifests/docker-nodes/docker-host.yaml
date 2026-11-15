@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-host-node
+  namespace: infra-docker
+  labels:
+    node: CT108
+    role: container-runtime
+spec:
+  ports:
+    - name: http-app
+      port: 8080
+      targetPort: 8080
+    - name: cadvisor-metrics
+      port: 8085
+      targetPort: 8085
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: docker-host-node
+  namespace: infra-docker
+subsets:
+  - addresses:
+      - ip: 10.10.10.108
+    ports:
+      - name: http-app
+        port: 8080
+      - name: cadvisor-metrics
+        port: 8085
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-host-info
+  namespace: infra-docker
+data:
+  vmid: "108"
+  hostname: "docker-host"
+  ip: "10.10.10.108"
+  runtime: "Docker Engine & Docker Compose v5.1.4"
+  containers: "cadvisor (8085), my-custom-website (8080)"
+  status: "ONLINE"
