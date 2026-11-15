@@ -1,20 +1,39 @@
 ---
-- name: Build and Deploy Docker Application
+- name: Build and Deploy Portfolio App on Docker Host
   hosts: docker
   become: yes
   tasks:
     - name: Ensure app directory exists on Docker Host
       file:
-        path: /root/my-first-app
+        path: /root/portfolio-app
         state: directory
 
-    - name: Copy application files from Jenkins workspace to Docker Host
-      copy:
-        src: ../app/
-        dest: /root/my-first-app/
+    - name: Ensure git and curl are installed
+      apt:
+        name:
+          - git
+          - curl
+        state: present
+        update_cache: no
 
-    - name: Build the new Docker image
-      command: docker build -t abhis01/abhi-web-app:latest /root/my-first-app/
+    - name: Ensure portfolio app repository is up-to-date
+      git:
+        repo: 'https://github.com/ABHISHEK-CLOUD1/app.git'
+        dest: /root/portfolio-app
+        version: main
+        force: yes
+
+    - name: Copy optimized Dockerfile and Nginx configuration
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0644'
+      loop:
+        - { src: '../app/Dockerfile', dest: '/root/portfolio-app/Dockerfile' }
+        - { src: '../app/nginx.conf', dest: '/root/portfolio-app/nginx.conf' }
+
+    - name: Build the React Portfolio Docker image
+      command: docker build -t abhis01/abhi-web-app:latest /root/portfolio-app/
 
     - name: Stop existing container (if running)
       command: docker stop my-custom-website
@@ -24,5 +43,19 @@
       command: docker rm my-custom-website
       ignore_errors: yes
 
-    - name: Deploy the new container
-      command: docker run -d -p 8080:80 --name my-custom-website abhis01/abhi-web-app:latest
+    - name: Deploy the new container on port 8080
+      command: docker run -d -p 8080:80 --name my-custom-website --restart unless-stopped abhis01/abhi-web-app:latest
+
+    - name: Export built image to Argo CD K3s containerd
+      shell: "docker save abhis01/abhi-web-app:latest | sshpass -p 'Ironman@01' ssh -o StrictHostKeyChecking=no root@10.10.10.109 '/usr/local/bin/k3s ctr -n k8s.io images import -'"
+      ignore_errors: yes
+
+- name: Sync and Verify Application in Argo CD
+  hosts: argocd
+  become: yes
+  tasks:
+    - name: Trigger Argo CD Application Sync
+      command: /usr/local/bin/argocd app sync portfolio-website
+
+    - name: Wait for Argo CD Application Health
+      command: /usr/local/bin/argocd app wait portfolio-website --health --timeout 60
