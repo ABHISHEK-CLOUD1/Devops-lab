@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oci-vm2-cloud-kubernetes
+  namespace: infra-cloud
+  labels:
+    app.kubernetes.io/name: oci-k8s-node
+    node.homelab/id: "oci-vm2"
+    node.homelab/role: "cloud-compute-worker"
+spec:
+  type: ExternalName
+  externalName: 130.210.84.113
+  ports:
+    - name: node-exporter
+      port: 9100
+      targetPort: 9100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oci-cloud-instances-spec
+  namespace: infra-cloud
+  labels:
+    provider: "oracle-cloud-infrastructure"
+data:
+  README.md: |
+    # Oracle Cloud Infrastructure (OCI) Hybrid Fleet
+    
+    - **Region**: `ap-mumbai-1`
+    - **Tenancy**: Managed via Terraform in `Devops-lab/terraform`
+    
+    ### Cloud Virtual Machines:
+    1. **OCI VM 1 (Grafana Host)**:
+       - **Public IP**: `137.23.38.177`
+       - **Port**: `3000` (Grafana Web UI)
+       - **Tunnel Gateway**: Bound to CT100 port `9101`.
+    2. **OCI VM 2 (Kubernetes Candidate)**:
+       - **Public IP**: `130.210.84.113`
+       - **Port**: `9100` (Node Exporter)
+       - **Tunnel Gateway**: Bound to CT100 port `9102`.

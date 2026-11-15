@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfolio-website
+  namespace: argocd
+  labels:
+    tier: production-application
+    environment: enterprise-hybrid-lab
+    role: portfolio-web-application
+    source: github-abhishek-cloud1-app
+  annotations:
+    tier.title: "Tier 7: Abhishek Mishra — Software Engineer Portfolio Website"
+    argocd.argoproj.io/description: "Live production web application. Developed in React 19 / CRACO / Tailwind CSS from repository ABHISHEK-CLOUD1/app, compiled multi-stage into container abhis01/abhi-web-app:latest, and running under Nginx on CT108 and K3s."
+    link.argocd.argoproj.io/external-link: "http://192.168.155.139:8080"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ABHISHEK-CLOUD1/Devops-lab.git'
+    targetRevision: main
+    path: gitops/manifests/portfolio-website
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

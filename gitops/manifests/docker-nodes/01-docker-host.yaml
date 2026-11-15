@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ct108-docker-runtime-host
+  namespace: infra-docker
+  labels:
+    app.kubernetes.io/name: docker-host
+    node.homelab/id: "ct108"
+    node.homelab/role: "production-container-host"
+spec:
+  type: ExternalName
+  externalName: 10.10.10.108
+  ports:
+    - name: http-production-app
+      port: 8080
+      targetPort: 8080
+    - name: cadvisor-metrics
+      port: 8085
+      targetPort: 8080
+    - name: node-exporter
+      port: 9100
+      targetPort: 9100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ct108-docker-spec
+  namespace: infra-docker
+  labels:
+    node.homelab/id: "ct108"
+data:
+  README.md: |
+    # CT108: Production Docker Runtime Node
+    
+    - **Node VMID**: `108`
+    - **Hostname**: `docker-host`
+    - **IP Address**: `10.10.10.108` (eth1) | `192.168.155.139` (eth0)
+    - **Memory**: 2048 MB RAM + 2048 MB Swap (Optimized for React/Craco builds)
+    - **Primary Role**: Production Docker Container Engine
+    
+    ### Active Workloads:
+    - **`my-custom-website`**: Abhishek Mishra's Portfolio App (`abhis01/abhi-web-app:latest`) running on port `8080`.
+    - **`cadvisor`**: Google Container Advisor exposing live container metrics on port `8085`.
+    - **`node-exporter`**: Host CPU, Memory, Disk, and Network telemetry on port `9100`.

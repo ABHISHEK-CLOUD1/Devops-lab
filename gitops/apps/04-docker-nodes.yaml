@@ -4,7 +4,14 @@ metadata:
   name: docker-nodes
   namespace: argocd
   labels:
-    tier: compute
+    tier: docker-runtime
+    environment: enterprise-hybrid-lab
+    role: container-execution
+    nodes: ct108
+  annotations:
+    tier.title: "Tier 4: Production Docker Container Host"
+    argocd.argoproj.io/description: "Production container runtime node. Runs CT108 (Docker Host upgraded to 2GB RAM / 2GB Swap) executing production web containers, cAdvisor container health metrics on port 8085, and production application workloads on port 8080."
+    link.argocd.argoproj.io/external-link: "http://192.168.155.139:8080"
 spec:
   project: default
   source:

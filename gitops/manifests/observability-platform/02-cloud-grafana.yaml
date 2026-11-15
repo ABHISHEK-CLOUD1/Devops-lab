@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oci-vm1-cloud-grafana
+  namespace: infra-monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    node.homelab/id: "oci-vm1"
+    node.homelab/role: "cloud-visualization-dashboards"
+spec:
+  type: ExternalName
+  externalName: 137.23.38.177
+  ports:
+    - name: http-grafana
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oci-vm1-grafana-spec
+  namespace: infra-monitoring
+  labels:
+    node.homelab/id: "oci-vm1"
+data:
+  README.md: |
+    # Oracle Cloud VM 1: Cloud Grafana Visualization Server
+    
+    - **Location**: Oracle Cloud Infrastructure (OCI) `ap-mumbai-1`
+    - **Public IP**: `137.23.38.177`
+    - **Grafana URL**: [http://137.23.38.177:3000](http://137.23.38.177:3000)
+    - **Version**: Grafana 13.3.1
+    - **Primary Role**: Global Hybrid Visualization & Executive Dashboards
+    
+    ### Connection Topology:
+    - Queries Prometheus TSDB securely over the reverse SSH tunnel at `http://localhost:9090`.
+    - Renders real-time telemetry from all 11 on-prem and cloud nodes.

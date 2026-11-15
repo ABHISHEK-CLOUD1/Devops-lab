@@ -45,10 +45,24 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: portfolio-website-metadata
+  name: portfolio-website-spec
   namespace: default
+  labels:
+    app: portfolio-website
 data:
-  source_repo: "https://github.com/ABHISHEK-CLOUD1/app"
-  tech_stack: "React 19, CRACO, Tailwind CSS, Lucide React, Netlify-ready"
-  deployed_target: "Docker Host (10.10.10.108:8080)"
-  status: "SYNCHRONIZED"
+  README.md: |
+    # Abhishek Mishra — Software Engineer Portfolio Website
+    
+    - **Source Repository**: [https://github.com/ABHISHEK-CLOUD1/app](https://github.com/ABHISHEK-CLOUD1/app)
+    - **Frontend Stack**: React 19, CRACO, Tailwind CSS, Lucide Icons, Radix UI
+    - **Production Container Image**: `abhis01/abhi-web-app:latest`
+    - **Web Server Runtime**: Nginx Alpine with SPA history API fallback
+    - **Production Access URL**: [http://192.168.155.139:8080/](http://192.168.155.139:8080/)
+    - **Cluster Service IP**: `10.43.213.54:80`
+    
+    ### Automated Deployment Flow:
+    1. Git commit pushed to `ABHISHEK-CLOUD1/app.git` or `Devops-lab.git`.
+    2. Jenkins polls and executes `ansible/deploy-app.yml`.
+    3. Multi-stage build executes on CT108.
+    4. Image is synchronized to CT109 containerd.
+    5. Argo CD triggers sync and validates application health.

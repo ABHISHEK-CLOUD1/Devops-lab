@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-infrastructure
+  namespace: argocd
+  labels:
+    tier: cloud-hybrid
+    environment: enterprise-hybrid-lab
+    role: oci-compute-observability
+    nodes: oci-vm1-oci-vm2
+  annotations:
+    tier.title: "Tier 6: Oracle Cloud Infrastructure (OCI) Hybrid Extension"
+    argocd.argoproj.io/description: "Public cloud hybrid infrastructure in OCI ap-mumbai-1 region. Includes OCI VM 1 (Ubuntu 22.04 hosting Cloud Grafana 13.3.1 on port 3000) and OCI VM 2 (Kubernetes Node Exporter on port 9100) linked via persistent SSH tunnels."
+    link.argocd.argoproj.io/external-link: "http://137.23.38.177:3000"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ABHISHEK-CLOUD1/Devops-lab.git'
+    targetRevision: main
+    path: gitops/manifests/cloud-infrastructure
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: infra-cloud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

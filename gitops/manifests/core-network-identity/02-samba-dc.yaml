@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ct105-samba-activedirectory-dns
+  namespace: infra-network
+  labels:
+    app.kubernetes.io/name: samba-dc
+    node.homelab/id: "ct105"
+    node.homelab/role: "active-directory-domain-controller-dns"
+spec:
+  type: ExternalName
+  externalName: 10.10.10.105
+  ports:
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+    - name: kerberos
+      port: 88
+    - name: ldap
+      port: 389
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ct105-samba-dc-spec
+  namespace: infra-network
+  labels:
+    node.homelab/id: "ct105"
+data:
+  README.md: |
+    # CT105: Samba Active Directory Domain Controller & DNS
+    
+    - **Node VMID**: `105`
+    - **Hostname**: `samba-dc`
+    - **IP Address**: `10.10.10.105` (eth1)
+    - **Domain Realm**: `LAB.LOCAL`
+    - **Primary Role**: Central Enterprise Identity Provider & Authoritative DNS
+    
+    ### Key Responsibilities:
+    1. Authoritative internal DNS resolution for all homelab nodes (`*.lab.local`).
+    2. Kerberos ticket-granting service (KDC) and LDAP authentication directory.
+    3. Joined domain members: `CT101` (webserver), `CT103` (staging), `CT104` (production).

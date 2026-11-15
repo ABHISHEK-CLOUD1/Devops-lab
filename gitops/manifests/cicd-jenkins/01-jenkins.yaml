@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ct102-jenkins-ci-engine
+  namespace: infra-cicd
+  labels:
+    app.kubernetes.io/name: jenkins
+    node.homelab/id: "ct102"
+    node.homelab/role: "ci-cd-pipeline-engine"
+spec:
+  type: ExternalName
+  externalName: 10.10.10.102
+  ports:
+    - name: http-jenkins
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ct102-jenkins-spec
+  namespace: infra-cicd
+  labels:
+    node.homelab/id: "ct102"
+data:
+  README.md: |
+    # CT102: Jenkins Automation Server & CI/CD Engine
+    
+    - **Node VMID**: `102`
+    - **Hostname**: `jenkins`
+    - **IP Address**: `10.10.10.102` (eth1) | Port `8080`
+    - **Web URL**: [http://10.10.10.102:8080/](http://10.10.10.102:8080/)
+    - **Job Name**: `devops-pipeline`
+    - **Primary Role**: Autonomous Continuous Integration & Continuous Delivery
+    
+    ### Automated Stages:
+    1. **Checkout**: Polls `https://github.com/ABHISHEK-CLOUD1/Devops-lab.git` on branch `main` every minute.
+    2. **Deploy Cloud Infrastructure**: Validates and reconciles OCI Terraform resources.
+    3. **Deploy Docker App via Ansible**: Pulls from `ABHISHEK-CLOUD1/app.git`, compiles React/Craco frontend in Docker, restarts container on CT108, exports image to K3s containerd, and triggers Argo CD sync!
+    4. **Verify**: Asserts live HTTP 200 health response.

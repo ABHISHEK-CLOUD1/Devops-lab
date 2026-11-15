@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-gitops-engine
+  namespace: argocd
+  labels:
+    tier: gitops-control-plane
+    environment: enterprise-hybrid-lab
+    role: declarative-gitops-controller
+    nodes: ct109
+  annotations:
+    tier.title: "Tier 5: Argo CD GitOps Control Plane & K3s Cluster"
+    argocd.argoproj.io/description: "Declarative GitOps engine. Runs CT109 (argocd-k8s, 2 vCPUs, 3GB RAM, 15GB disk) hosting K3s v1.37.2 lightweight Kubernetes, CoreDNS forwarding, Flannel CNI, node-exporter (port 9100), and Argo CD v3.6.1 with automated self-healing."
+    link.argocd.argoproj.io/external-link: "https://192.168.155.142:30443"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ABHISHEK-CLOUD1/Devops-lab.git'
+    targetRevision: main
+    path: gitops/manifests/argocd-gitops-engine
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

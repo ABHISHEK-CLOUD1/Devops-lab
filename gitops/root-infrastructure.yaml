@@ -3,6 +3,13 @@ kind: Application
 metadata:
   name: root-infrastructure
   namespace: argocd
+  labels:
+    tier: master-control-plane
+    environment: enterprise-hybrid-lab
+  annotations:
+    argocd.argoproj.io/description: "Master App-of-Apps coordinating all hybrid homelab tiers across on-prem Proxmox VE and Oracle Cloud Infrastructure."
+    tier.title: "Hybrid Cloud Homelab — Master Infrastructure Orchestrator"
+    link.argocd.argoproj.io/external-link: "https://192.168.155.142:30443"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

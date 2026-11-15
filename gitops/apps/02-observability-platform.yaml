@@ -4,7 +4,14 @@ metadata:
   name: observability-platform
   namespace: argocd
   labels:
-    tier: monitoring
+    tier: observability-platform
+    environment: enterprise-hybrid-lab
+    role: central-monitoring-metrics
+    nodes: ct106-cloudvm1
+  annotations:
+    tier.title: "Tier 2: Observability Platform & Central TSDB"
+    argocd.argoproj.io/description: "Central monitoring platform. Houses CT106 (Prometheus Core TSDB scraping all 10 hybrid nodes) and connects to Oracle Cloud VM 1 (Grafana Server 13.3.1 at 137.23.38.177:3000) via encrypted bidirectional SSH tunnels."
+    link.argocd.argoproj.io/external-link: "http://137.23.38.177:3000"
 spec:
   project: default
   source:

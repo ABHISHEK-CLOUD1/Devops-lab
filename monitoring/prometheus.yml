@@ -67,6 +67,11 @@ scrape_configs:
           nodename: 'docker-host'
           ip: '10.10.10.108'
           application: 'Docker Engine (my-custom-website & cAdvisor)'
+      - targets: ['10.10.10.109:9100']
+        labels:
+          nodename: 'argocd-k8s'
+          ip: '10.10.10.109'
+          application: 'Argo CD & K3s GitOps Control Plane'
 
       # Oracle Cloud VM 1: Grafana Server
       - targets: ['10.10.10.100:9101']
@@ -89,3 +94,8 @@ scrape_configs:
           nodename: 'docker-host'
           ip: '10.10.10.108'
           application: 'cAdvisor Container Monitor'
+      - targets: ['10.10.10.109:9100']
+        labels:
+          nodename: 'argocd-k8s'
+          ip: '10.10.10.109'
+          application: 'Argo CD & K3s GitOps Control Plane'

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ct100-ansible-gateway
+  namespace: infra-network
+  labels:
+    app.kubernetes.io/name: control-node
+    node.homelab/id: "ct100"
+    node.homelab/role: "ansible-orchestrator-gateway"
+spec:
+  type: ExternalName
+  externalName: 10.10.10.100
+  ports:
+    - name: ssh-mgmt
+      port: 22
+      targetPort: 22
+    - name: tunnel-cloud-vm1
+      port: 9101
+      targetPort: 9101
+    - name: tunnel-cloud-vm2
+      port: 9102
+      targetPort: 9102
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ct100-control-node-spec
+  namespace: infra-network
+  labels:
+    node.homelab/id: "ct100"
+data:
+  README.md: |
+    # CT100: Ansible Control Node & SSH Gateway
+    
+    - **Node VMID**: `100`
+    - **Hostname**: `control-node`
+    - **IP Address**: `10.10.10.100` (eth1) | `192.168.155.132` (eth0)
+    - **OS**: Ubuntu 22.04 LTS
+    - **Primary Role**: Central Automation Orchestrator & Cloud Tunnel Gateway
+    
+    ### Key Responsibilities:
+    1. Holds the primary git repository at `/root/Devops-lab`.
+    2. Runs Ansible playbooks targeting on-prem LXCs and Oracle Cloud VMs.
+    3. Runs persistent systemd background SSH tunnels:
+       - `prometheus-cloud-tunnel.service`: Forwards CT106 Prometheus to OCI Grafana (`localhost:9090`).
+       - `k8s-cloud-tunnel.service`: Forwards OCI VM 2 Node Exporter (`:9102 -> 130.210.84.113:9100`).
+    4. Acts as central keymaster holding `/root/.ssh/oci_vm_key` for cloud instances.

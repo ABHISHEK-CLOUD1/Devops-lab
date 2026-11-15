@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ct106-prometheus-core
+  namespace: infra-monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+    node.homelab/id: "ct106"
+    node.homelab/role: "central-metrics-engine"
+spec:
+  type: ExternalName
+  externalName: 10.10.10.106
+  ports:
+    - name: http-tsdb
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ct106-prometheus-spec
+  namespace: infra-monitoring
+  labels:
+    node.homelab/id: "ct106"
+data:
+  README.md: |
+    # CT106: Central Prometheus Monitoring Engine
+    
+    - **Node VMID**: `106`
+    - **Hostname**: `prometheus`
+    - **IP Address**: `10.10.10.106` (eth1) | Port `9090`
+    - **External UI**: `http://10.10.10.106:9090`
+    - **Primary Role**: Central Time-Series Metrics Aggregator (TSDB)
+    
+    ### Monitored Scrape Targets (11 Active):
+    - `control-node` (`10.10.10.100:9100`)
+    - `terraform-test` (`10.10.10.101:9100`)
+    - `jenkins` (`10.10.10.102:9100`)
+    - `staging` (`10.10.10.103:9100`)
+    - `production` (`10.10.10.104:9100`)
+    - `samba-dc` (`10.10.10.105:9100`)
+    - `prometheus` (`10.10.10.106:9100`)
+    - `docker-host` (`10.10.10.108:9100`) & cAdvisor (`:8085`)
+    - `argocd-k8s` (`10.10.10.109:9100`) -> NEW!
+    - `cloud-grafana` (`10.10.10.100:9101` -> OCI VM 1 `:9100`)
+    - `cloud-k8s` (`10.10.10.100:9102` -> OCI VM 2 `:9100`)

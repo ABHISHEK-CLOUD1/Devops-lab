@@ -4,7 +4,14 @@ metadata:
   name: core-network-identity
   namespace: argocd
   labels:
-    tier: infrastructure
+    tier: core-network-identity
+    environment: enterprise-hybrid-lab
+    role: identity-dns-gateway
+    nodes: ct100-ct105
+  annotations:
+    tier.title: "Tier 1: Core Network & Active Directory Identity"
+    argocd.argoproj.io/description: "Central network gateway and identity platform. Manages CT100 (Ansible Controller, SSH Tunnel Gateway, and Central Keymaster) and CT105 (Samba Active Directory Domain Controller, Kerberos KDC, and authoritative DNS for LAB.LOCAL)."
+    link.argocd.argoproj.io/external-link: "https://192.168.155.128:8006"
 spec:
   project: default
   source:

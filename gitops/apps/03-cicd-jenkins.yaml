@@ -4,7 +4,14 @@ metadata:
   name: cicd-jenkins
   namespace: argocd
   labels:
-    tier: cicd
+    tier: cicd-automation
+    environment: enterprise-hybrid-lab
+    role: build-test-deploy
+    nodes: ct102
+  annotations:
+    tier.title: "Tier 3: Enterprise CI/CD Pipeline Engine"
+    argocd.argoproj.io/description: "Continuous integration and delivery engine. Runs CT102 (Jenkins Server on port 8080) executing multi-stage pipelines: GitHub SCM polling, OCI Terraform infrastructure management, Ansible orchestration, and Argo CD GitOps synchronization."
+    link.argocd.argoproj.io/external-link: "http://10.10.10.102:8080"
 spec:
   project: default
   source:
